@@ -117,7 +117,9 @@ const App: React.FC = () => {
   // Views that should show the bottom navigation
   const showBottomNav = ['home', 'recommended-feed', 'recommended-content'].includes(currentView);
 
-  // No separate loading state needed since it's handled in renderView
+  if (currentView === 'auth' || currentView === 'loading') {
+    return renderView();
+  }
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden relative">

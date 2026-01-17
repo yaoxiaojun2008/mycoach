@@ -13,6 +13,20 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Helper to get the correct redirect URL
+  const getRedirectUrl = () => {
+    // Try to get from environment variable first
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      const envRedirect = (import.meta as any).env.VITE_DEPLOY_HOST;
+      if (envRedirect) {
+        return `${envRedirect}`;
+      }
+    }
+    
+    // Fallback to current origin
+    return typeof window !== 'undefined' ? window.location.origin : '';
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,10 +42,15 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
           onLoginSuccess();
         }, 500);
       } else {
+        const redirectTo = getRedirectUrl();
+        
         const { data, error } = await supabase.auth.signUp({ 
           email, 
           password,
-          options: { data: { name: email.split('@')[0], level: 'B1 Intermediate' } }
+          options: { 
+            data: { name: email.split('@')[0], level: 'B1 Intermediate' },
+            emailRedirectTo: `${redirectTo}/auth/callback` // Use the correct redirect URL for email confirmation
+          }
         });
         if (error) throw error;
         
