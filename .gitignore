@@ -26,3 +26,5 @@ dist-ssr
 # Environment and SQL files
 .env*
 *.sql
+test*
+*.md
