@@ -222,7 +222,7 @@ export const WritingCoach: React.FC<WritingCoachProps> = ({ onNavigate }) => {
                             </button>
                         </div>
                     </div>
-                    {message && <p className="mt-2 text-sm text-center text-red-500 font-medium">{message}</p>}
+                    {message && <p className="mt-2 text-sm text-center text-green-600 font-medium">{message}</p>}
                 </section>
 
                 {/* AI Tools Grid */}
