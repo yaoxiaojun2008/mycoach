@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 
@@ -21,8 +20,13 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Wait a moment to ensure session is established
+        setTimeout(() => {
+          onLoginSuccess();
+        }, 500);
       } else {
         const { data, error } = await supabase.auth.signUp({ 
           email, 
@@ -36,8 +40,12 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
           setMessage("Sign up successful! Please check your email to confirm your account.");
           return;
         }
+        
+        // Wait a moment to ensure session is established
+        setTimeout(() => {
+          onLoginSuccess();
+        }, 500);
       }
-      onLoginSuccess();
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {

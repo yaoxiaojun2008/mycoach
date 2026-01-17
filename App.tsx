@@ -15,14 +15,24 @@ import { Auth } from './views/Auth';
 import { supabase } from './services/supabaseClient';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('home');
+  const [currentView, setCurrentView] = useState<ViewState>('auth'); // Changed to 'auth' as default
   const [session, setSession] = useState<any>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      
+      // If there's an active session, go to home; otherwise stay on auth
+      if (session) {
+        setCurrentView('home');
+      } else {
+        setCurrentView('auth');
+      }
+      
+      setLoading(false);
     });
 
     // Listen for changes
@@ -30,6 +40,13 @@ const App: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      // If user logs in, redirect to home
+      if (session) {
+        setCurrentView('home');
+      } else {
+        // If user logs out, redirect to auth
+        setCurrentView('auth');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -80,6 +97,13 @@ const App: React.FC = () => {
         return <WritingCoach onNavigate={handleNavigate} />;
       case 'writing-history':
         return <WritingHistory onNavigate={handleNavigate} />;
+      case 'auth':
+        return <Auth onLoginSuccess={() => {
+          // Small delay to ensure session is properly established
+          setTimeout(() => {
+            setCurrentView('home');
+          }, 300);
+        }} />;
       default:
         return <Home user={user} onNavigate={handleNavigate} />;
     }
@@ -88,8 +112,16 @@ const App: React.FC = () => {
   // Views that should show the bottom navigation
   const showBottomNav = ['home', 'recommended-feed', 'recommended-content'].includes(currentView);
 
-  if (!session) {
-    return <Auth onLoginSuccess={() => setCurrentView('home')} />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (currentView === 'auth') {
+    return renderView();
   }
 
   return (
