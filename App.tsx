@@ -15,38 +15,37 @@ import { Auth } from './views/Auth';
 import { supabase } from './services/supabaseClient';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('auth'); // Changed to 'auth' as default
+  const [currentView, setCurrentView] = useState<ViewState>('loading'); // Changed to 'loading' initially
   const [session, setSession] = useState<any>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      
-      // If there's an active session, go to home; otherwise stay on auth
-      if (session) {
-        setCurrentView('home');
-      } else {
-        setCurrentView('auth');
-      }
-      
-      setLoading(false);
-    });
-
-    // Listen for changes
+    // Initialize Supabase auth listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      // If user logs in, redirect to home
+      // If there's an active session, go to home; otherwise show auth
       if (session) {
         setCurrentView('home');
       } else {
-        // If user logs out, redirect to auth
         setCurrentView('auth');
       }
+    });
+
+    // Also check the current session on initial load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      // If there's an active session, go to home; otherwise show auth
+      if (session) {
+        setCurrentView('home');
+      } else {
+        setCurrentView('auth');
+      }
+    }).catch(() => {
+      // If there's an error getting the session (e.g., due to misconfigured Supabase keys),
+      // default to showing the auth page
+      setCurrentView('auth');
     });
 
     return () => subscription.unsubscribe();
@@ -104,6 +103,12 @@ const App: React.FC = () => {
             setCurrentView('home');
           }, 300);
         }} />;
+      case 'loading':
+        return (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        );
       default:
         return <Home user={user} onNavigate={handleNavigate} />;
     }
@@ -112,17 +117,7 @@ const App: React.FC = () => {
   // Views that should show the bottom navigation
   const showBottomNav = ['home', 'recommended-feed', 'recommended-content'].includes(currentView);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (currentView === 'auth') {
-    return renderView();
-  }
+  // No separate loading state needed since it's handled in renderView
 
   return (
     <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden relative">
