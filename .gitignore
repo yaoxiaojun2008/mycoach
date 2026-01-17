@@ -22,8 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-# md
-*.md
-#env and sql
+
+# Environment and SQL files
 .env*
 *.sql
