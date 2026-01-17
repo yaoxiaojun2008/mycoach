@@ -42,6 +42,8 @@ This is an AI-powered English learning application with integrated reading and w
 5. Add your environment variables in the Environment Variables section:
    - `GEMINI_API_KEY`: Your Google Gemini API key
    - `DEEPSEEK_API_KEY`: Your DeepSeek API key (if using)
+   - `SUPABASE_URL`: Your Supabase project URL
+   - `SUPABASE_ANON_KEY`: Your Supabase anon key
 6. Click "Deploy" and wait for the build to complete
 7. Your application will be live with a URL like `https://your-project.vercel.app`
 
@@ -51,6 +53,8 @@ For the application to work properly, you need to set the following environment 
 
 - `GEMINI_API_KEY`: Your Google Gemini API key for AI services
 - `DEEPSEEK_API_KEY`: Your DeepSeek API key (optional, if using DeepSeek instead of Gemini)
+- `SUPABASE_URL`: Your Supabase project URL (find this in your Supabase dashboard)
+- `SUPABASE_ANON_KEY`: Your Supabase anon key (find this in your Supabase dashboard under Settings > API)
 
 These should be added in the Vercel dashboard under Settings > Environment Variables.
 
