@@ -15,7 +15,7 @@ import { Auth } from './views/Auth';
 import { supabase } from './services/supabaseClient';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('loading'); // Changed to 'loading' initially
+  const [currentView, setCurrentView] = useState<ViewState>('home'); // Default to home initially
   const [session, setSession] = useState<any>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
@@ -25,27 +25,13 @@ const App: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      // If there's an active session, go to home; otherwise show auth
-      if (session) {
-        setCurrentView('home');
-      } else {
-        setCurrentView('auth');
-      }
     });
 
     // Also check the current session on initial load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      // If there's an active session, go to home; otherwise show auth
-      if (session) {
-        setCurrentView('home');
-      } else {
-        setCurrentView('auth');
-      }
-    }).catch(() => {
-      // If there's an error getting the session (e.g., due to misconfigured Supabase keys),
-      // default to showing the auth page
-      setCurrentView('auth');
+    }).catch((error) => {
+      console.error("Error getting session:", error);
     });
 
     return () => subscription.unsubscribe();
@@ -55,12 +41,21 @@ const App: React.FC = () => {
   const user: User = {
     name: session?.user?.email?.split('@')[0] || "Guest",
     level: "B2 Intermediate",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbgMzQAemg9hfw8Avdlmuz4zi70OIjHlgeABrKIvs0gHBkeju9DVqvJPddyOHI666DlKu6t04ADZ7tCw91wNpyeTn0ZTta4YEZGlqoA3CeUe3Ng2zygg2_7HB2PiGZVbnN21Qg0qdubaNobOcHUyJaURh8R__aoS95ZKeic8GSX5w3IrO5Dp9WJRUnpqcZthoWIOpXwVlpPXBJeZmdNIF4Ck8oGQC1VGSGgqqAR4AERAHtg4ehi1ELJJ5p-pM-zxo9OpKYjSJP4iLC"
+    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbgMzQAemg9hfw8Avdlmuz4zi70OIjHlgeABrKIvs0gHBkeju9DVqvJPddyOHI666DlKu6t04ADZ7tCw91wNpyeTn0ZTta4YEZGlqoA3CeUe3Ng2zygg2_7HB2PiGZVbnN21Qg0qdubaNobOcHUyJaURh8R__aoS95ZKeic8GSX5w3IrO5Dp9WJRUnpqcZthoWIOpXwVlpPXBJeZmdNIF4Ck8oGQC1VGSGgqqAR4AERAHtg4ehi1ELJJ5p-pM-zxo9OpKYjSJP4iLC",
+    email: session?.user?.email || undefined
   };
 
   const [previousView, setPreviousView] = useState<ViewState>('home');
 
   const handleNavigate = (view: ViewState) => {
+    // Check if we need to authenticate before navigating to restricted views
+    if ((view === 'writing-coach' || view === 'reading-coach') && !session) {
+      // Save the destination view to return after authentication
+      sessionStorage.setItem('postAuthRedirect', view);
+      setCurrentView('auth');
+      return;
+    }
+    
     // Save previous view if navigating TO article-reader from key pages
     // This allows the back button to work correctly in ArticleReader
     if (view === 'article-reader') {
@@ -74,11 +69,29 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
+  const handleAuthSuccess = () => {
+    // Small delay to ensure session is properly established
+    setTimeout(() => {
+      // Check if we have a post-auth redirect view
+      const postAuthRedirect = sessionStorage.getItem('postAuthRedirect');
+      if (postAuthRedirect) {
+        sessionStorage.removeItem('postAuthRedirect');
+        setCurrentView(postAuthRedirect as ViewState);
+      } else {
+        setCurrentView('home');
+      }
+    }, 300);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <Home user={user} onNavigate={handleNavigate} />;
+        return <Home user={user} onNavigate={handleNavigate} session={session} />;
       case 'reading-coach':
+        // Only render if authenticated
+        if (!session) {
+          return <Auth onLoginSuccess={handleAuthSuccess} />;
+        }
         return <ReadingCoach onNavigate={handleNavigate} />;
       case 'quiz-analysis':
         return <QuizAnalysis onNavigate={handleNavigate} />;
@@ -93,16 +106,19 @@ const App: React.FC = () => {
       case 'chat':
         return <ChatInterface onNavigate={handleNavigate} />;
       case 'writing-coach':
+        // Only render if authenticated
+        if (!session) {
+          return <Auth onLoginSuccess={handleAuthSuccess} />;
+        }
         return <WritingCoach onNavigate={handleNavigate} />;
       case 'writing-history':
+        // Only render if authenticated
+        if (!session) {
+          return <Auth onLoginSuccess={handleAuthSuccess} />;
+        }
         return <WritingHistory onNavigate={handleNavigate} />;
       case 'auth':
-        return <Auth onLoginSuccess={() => {
-          // Small delay to ensure session is properly established
-          setTimeout(() => {
-            setCurrentView('home');
-          }, 300);
-        }} />;
+        return <Auth onLoginSuccess={handleAuthSuccess} />;
       case 'loading':
         return (
           <div className="flex items-center justify-center min-h-screen">
@@ -110,7 +126,7 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        return <Home user={user} onNavigate={handleNavigate} />;
+        return <Home user={user} onNavigate={handleNavigate} session={session} />;
     }
   };
 
@@ -122,7 +138,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden relative">
+    <div className="flex flex-col min-h-screen max-h-screen max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden relative">
       {renderView()}
 
       {showBottomNav && (

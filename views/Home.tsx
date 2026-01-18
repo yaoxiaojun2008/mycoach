@@ -1,20 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User, ViewState } from '../types';
+import { supabase } from '../services/supabaseClient'; // Import supabase directly
 
 interface HomeProps {
   user: User;
   onNavigate: (view: ViewState) => void;
+  session?: any; // Add session prop to determine if user is logged in
 }
 
-export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
+export const Home: React.FC<HomeProps> = ({ user, onNavigate, session }) => {
+  // Define image paths relative to the public directory
+  const articleBackground = '/assets/images/cards/article-background.jpg';
+  const writingCoachBg = '/assets/images/tutors/writing-coach-bg.jpg';
+  const readingCoachBg = '/assets/images/tutors/reading-coach-bg.jpg';
+  
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleProfileMenuClick = () => {
+    if (session) {
+      // If user is logged in, toggle the profile menu
+      setShowProfileMenu(!showProfileMenu);
+    } else {
+      // If user is not logged in, navigate to auth page
+      onNavigate('auth');
+    }
+  };
+
+  const handleSignOut = async () => {
+    // Close the menu first
+    setShowProfileMenu(false);
+    
+    // Perform sign out using Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error.message);
+    }
+    
+    // Navigate back to home which will show the auth page
+    onNavigate('home');
+  };
+
   return (
     <div className="flex-1 overflow-y-auto pb-32">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
         <div className="flex items-center p-4 pb-2 justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-10 shrink-0 overflow-hidden rounded-full border-2 border-primary">
-              <div className="bg-center bg-no-repeat aspect-square bg-cover size-full" style={{ backgroundImage: `url("${user.avatar}")` }}></div>
+            <div className="size-10 shrink-0 rounded-full border-2 border-primary relative">
+              <div 
+                className="bg-center bg-no-repeat aspect-square bg-cover size-full cursor-pointer rounded-full" 
+                style={{ backgroundImage: `url("${user.avatar}")` }}
+                onClick={handleProfileMenuClick}
+              ></div>
+              
+              {/* Profile Dropdown Menu */}
+              {showProfileMenu && session && (
+                <div className="absolute left-0 mt-12 w-64 bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-50 p-2">
+                  <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                    <p className="font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || 'No email'}</p>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2.5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-base">logout</span>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Hi, {user.name}!</h2>
@@ -41,46 +95,34 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
             Explore more
           </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto px-4 pb-4 no-scrollbar">
-          {/* Card 1 */}
+        <div className="flex flex-col items-center gap-4 px-4 pb-4">
+          {/* Card 1 - Article */}
           <div
             onClick={() => onNavigate('recommended-content')}
-            className="min-w-[280px] flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform"
+            className="w-full max-w-md flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform"
           >
-            <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-center bg-cover shadow-lg" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB1_CDUqvhxMEMTs6pLlLT-v7ION_Px2TlErc12PQFC5S3hxiwdvYl7ngzwRiSPMpBk2xuhhSXaadjlERkk64HYRUU9d2yF_cGiPI8hNsmLNrAKG2XEAR8-LMJs8Qh_fE9whcalk9FYFxjs_Uz20l-1-EoUk_dgtVGVHnZPDPJOZfpCsPF0k2TEBeN_8p_J3wIilqcxYQT7W0919TAoMVI1l-uTPYySEYz3tiFFJClZn5aY-2-ov5fxpDjBglcc9KY58BMuR5ZHW9NB")' }}>
+            <div 
+              className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-center bg-cover shadow-lg" 
+              style={{ 
+                backgroundImage: `url(${articleBackground})`,
+                backgroundPosition: 'center',
+                backgroundSize: 'cover', // Ensures the image fits properly without hiding parts
+              }}
+            >
               <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/60 backdrop-blur-md rounded-lg text-white">
                 <span className="material-symbols-outlined text-[16px]">description</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider">Article</span>
               </div>
             </div>
             <div className="px-1">
-              <h3 className="text-slate-900 dark:text-white text-base font-bold line-clamp-1 leading-tight mb-1">Exploring New York Accents</h3>
+              <h3 className="text-slate-900 dark:text-white text-base font-bold line-clamp-1 leading-tight mb-1">Exploring news and blogs today</h3>
               <p className="text-slate-500 dark:text-slate-400 text-xs font-medium flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-sm">schedule</span> 8 min read • Vocabulary
               </p>
             </div>
           </div>
 
-          {/* Card 2 */}
-          <div className="min-w-[280px] flex flex-col gap-3 group cursor-pointer">
-            <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-center bg-cover shadow-lg" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA2r68z9gh30aaU8PZQTV61Ayi7NAWOzKmSP7bhWQwm2pLtgC3n0i9ayMYJwy5tfKtplfhSu1cCLaUYPhS3RxtxILaVvJqJcp0P67yPpW_Z1Myt46m7FQQ_1Qf03JdmIUolfGVWikjoTiEu9wzM_FZbas1r-ojt9xyQDbcvtqYyp2xdcQ4OpcdblCIf0YKERISxmk9zb_c3Hb3fer650xRTlL6YLJJL4n5fuaFR82u6oi4rc0Rw8T5eigxBnrQWvzxayXH2QdSaIu5O")' }}>
-              <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                <div className="size-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center border border-white/40">
-                  <span className="material-symbols-outlined text-white text-3xl fill-1">play_arrow</span>
-                </div>
-              </div>
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/90 backdrop-blur-md rounded-lg text-white">
-                <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider">Video</span>
-              </div>
-            </div>
-            <div className="px-1">
-              <h3 className="text-slate-900 dark:text-white text-base font-bold line-clamp-1 leading-tight mb-1">Business English Basics</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-sm">schedule</span> 12 min video • Phrases
-              </p>
-            </div>
-          </div>
+          {/* Removed the video card section as previously requested */}
         </div>
       </section>
 
@@ -145,7 +187,7 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
                 </button>
               </div>
             </div>
-            <div className="flex-1 min-w-[100px] bg-center bg-no-repeat aspect-square bg-cover rounded-lg" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB4zHoJ2s5-AXWjBWTNm0qHIM_rfvQ_3KFgbC4MboSp5d8yHKNGQKrlfZwnrwWSxYyli6j9yMvHtt-MhooCMdTipWsIWQZymoU548Zn0EfiiS7Njk1nVp552jP1F2dbrn-7OGjrgGpQL7IrsSVWCCmfCizkJDfw38xQOYssRHNeMdqeRmQD53DOTToHKLSpviOvm77CskJxyEg0knWZLcSytXyx6bXJk4vxW0p1sGrJon8g_JT7goscWjfV0GIo6duiM0spjejqYZv3")' }}></div>
+            <div className="flex-1 min-w-[100px] bg-center bg-no-repeat aspect-square bg-cover rounded-lg" style={{ backgroundImage: `url(${writingCoachBg})` }}></div>
           </div>
 
           {/* Reading Coach */}
@@ -174,7 +216,7 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
                 </button>
               </div>
             </div>
-            <div className="flex-1 min-w-[100px] bg-center bg-no-repeat aspect-square bg-cover rounded-lg" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDCGvsvn75kiValqepwInPsUPbbycyoeGDGdnpAZMMNPmttFEybPB3vc7unWEol0C2QVhN1F_ZHwv9v7VoPAJrF_-DIUPz-PXAFRNnLD4F0Oxnal9OOVqRgt5i5ufQNqLMd87GC7ZG38BzgC2pzYXp3NnCcyHGjt4b7QLCctrVg45GV6tZ3k2bvWP9yAciHy8mjLG8BENlmoXKUrMVBiXzXi1Zx2LZR2vFqYsewg7xzIk7yf7G8eVLRLUUS0YgI1j54qIl_Lyjj3QVY")' }}></div>
+            <div className="flex-1 min-w-[100px] bg-center bg-no-repeat aspect-square bg-cover rounded-lg" style={{ backgroundImage: `url(${readingCoachBg})` }}></div>
           </div>
 
           {/* Live AI Tutor */}
