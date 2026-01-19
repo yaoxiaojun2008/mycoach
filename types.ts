@@ -1,5 +1,6 @@
 export type ViewState =
   | 'auth'
+  | 'auth-callback'  // Adding the auth callback view state
   | 'home'
   | 'reading-coach'
   | 'quiz-analysis'

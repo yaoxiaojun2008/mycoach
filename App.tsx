@@ -13,6 +13,7 @@ import { WritingCoach } from './views/WritingCoach';
 import { WritingHistory } from './views/WritingHistory';
 import { Auth } from './views/Auth';
 import { supabase } from './services/supabaseClient';
+import AuthCallback from './views/AuthCallback'; // Import the new AuthCallback component
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('home'); // Default to home initially
@@ -85,6 +86,8 @@ const App: React.FC = () => {
 
   const renderView = () => {
     switch (currentView) {
+      case 'auth-callback': // Handle the auth callback
+        return <AuthCallback />;
       case 'home':
         return <Home user={user} onNavigate={handleNavigate} session={session} />;
       case 'reading-coach':
@@ -98,7 +101,7 @@ const App: React.FC = () => {
       case 'recommended-feed':
         return <RecommendedFeed onNavigate={handleNavigate} />;
       case 'recommended-content':
-        return <RecommendedContent onNavigate={handleNavigate} onSelectArticle={setSelectedArticle} />;
+        return <RecommendedContent onNavigate={handleNavigate} />;
       case 'article-reader':
         return <ArticleReader article={selectedArticle} onNavigate={handleNavigate} previousView={previousView} />;
       case 'history':
@@ -133,7 +136,7 @@ const App: React.FC = () => {
   // Views that should show the bottom navigation
   const showBottomNav = ['home', 'recommended-feed', 'recommended-content'].includes(currentView);
 
-  if (currentView === 'auth' || currentView === 'loading') {
+  if (currentView === 'auth' || currentView === 'loading' || currentView === 'auth-callback') {
     return renderView();
   }
 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, ViewState } from '../types';
-import { supabase } from '../services/supabaseClient'; // Import supabase directly
+import { supabase } from '../services/supabaseClient';
+import { getRecommendedContentAndMarkAsPushed, RecommendedArticle } from '../utils/recommendedCache'; // Import the new function
 
 interface HomeProps {
   user: User;
@@ -41,7 +42,7 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate, session }) => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-32">
+    <div className="flex-1 overflow-y-auto pb-32 hide-scrollbar"> {/* Added hide-scrollbar class to hide scrollbar */}
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
         <div className="flex items-center p-4 pb-2 justify-between">

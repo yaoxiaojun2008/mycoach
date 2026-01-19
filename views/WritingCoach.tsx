@@ -171,7 +171,7 @@ export const WritingCoach: React.FC<WritingCoachProps> = ({ onNavigate }) => {
     ];
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-y-auto"> {/* Added overflow-y-auto to enable scrolling */}
             {/* Header */}
             <header className="sticky top-0 z-40 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between p-4">
@@ -228,7 +228,7 @@ export const WritingCoach: React.FC<WritingCoachProps> = ({ onNavigate }) => {
                 {/* AI Tools Grid */}
                 <section>
                     <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 px-1">AI Tools</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2"> {/* Changed grid layout to show more buttons in one row and reduced gap */}
                         {aiFunctions.map((func) => (
                             <button
                                 key={func.key}
@@ -240,15 +240,17 @@ export const WritingCoach: React.FC<WritingCoachProps> = ({ onNavigate }) => {
                                     }
                                 }}
                                 disabled={isLoading}
-                                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all group ${activeTool === func.key
+                                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg border transition-all group ${activeTool === func.key
                                     ? 'bg-primary/5 border-primary ring-2 ring-primary/20 dark:bg-primary/10'
                                     : 'bg-white dark:bg-card-dark border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10'
-                                    }`}
+                                    }`} // Reduced padding and made buttons smaller
                             >
-                                <div className="p-2 rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                                    <span className="material-symbols-outlined">{func.icon}</span>
+                                <div className="p-1.5 rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform size-8 flex items-center justify-center"> {/* Made icon container smaller */}
+                                    <span className="material-symbols-outlined text-sm"> {/* Reduced icon size */}
+                                        {func.icon}
+                                    </span>
                                 </div>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{func.label}</span>
+                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[60px]">{func.label}</span> {/* Reduced text size and added truncation */}
                             </button>
                         ))}
                     </div>

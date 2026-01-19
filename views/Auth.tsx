@@ -15,16 +15,19 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
 
   // Helper to get the correct redirect URL
   const getRedirectUrl = () => {
+    // For the callback, we want to redirect to our app's auth-callback handler
     // Try to get from environment variable first
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
       const envRedirect = (import.meta as any).env.VITE_DEPLOY_HOST;
       if (envRedirect) {
-        return `${envRedirect}`;
+        return `${envRedirect}#auth-callback`;
       }
     }
     
-    // Fallback to current origin
-    return typeof window !== 'undefined' ? window.location.origin : '';
+    // Fallback to current origin with auth-callback hash
+    return typeof window !== 'undefined' 
+      ? `${window.location.origin}${window.location.pathname}#auth-callback` 
+      : '';
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -49,7 +52,7 @@ export const Auth: React.FC<AuthProps> = ({ onLoginSuccess }) => {
           password,
           options: { 
             data: { name: email.split('@')[0], level: 'B1 Intermediate' },
-            emailRedirectTo: `${redirectTo}/auth/callback` // Use the correct redirect URL for email confirmation
+            emailRedirectTo: `${redirectTo}` // Use the correct redirect URL for email confirmation
           }
         });
         if (error) throw error;
