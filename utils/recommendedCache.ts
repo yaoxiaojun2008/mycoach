@@ -70,23 +70,23 @@ export const getCachedRecommendedContent = (): CacheData | null => {
  */
 export const fetchAndCacheRecommendedContent = async (): Promise<CacheData> => {
   try {
-    // Fetch latest 3 UNPUSHED news items
+    // Fetch latest 3 PUSHED news items
     const { data: newsData, error: newsError } = await supabase
       .from('recommended_articles')
       .select('*')
       .eq('type', 'News')
-      .eq('is_pushed_to_client', false)  // Only fetch non-pushed articles
+      .eq('is_pushed_to_client', true)  // Only fetch pushed articles
       .order('pulled_at', { ascending: false })
       .limit(3);
 
     if (newsError) throw new Error(newsError.message);
 
-    // Fetch latest 3 UNPUSHED blog items
+    // Fetch latest 3 PUSHED blog items
     const { data: blogData, error: blogError } = await supabase
       .from('recommended_articles')
       .select('*')
       .eq('type', 'Blog')
-      .eq('is_pushed_to_client', false)  // Only fetch non-pushed articles
+      .eq('is_pushed_to_client', true)  // Only fetch pushed articles
       .order('pulled_at', { ascending: false })
       .limit(3);
 
@@ -108,31 +108,6 @@ export const fetchAndCacheRecommendedContent = async (): Promise<CacheData> => {
   }
 };
 
-/**
- * Updates the is_pushed_to_client flag for the given articles
- */
-export const markArticlesAsPushed = async (articleIds: string[]): Promise<void> => {
-  if (articleIds.length === 0) return;
-  
-  try {
-    // Update each article individually since Supabase doesn't support bulk updates easily
-    for (const id of articleIds) {
-      const { error } = await supabase
-        .from('recommended_articles')
-        .update({ 
-          is_pushed_to_client: true, 
-          pushed_at: new Date().toISOString() 
-        })
-        .eq('id', id);
-
-      if (error) {
-        console.error(`Error updating article ${id}:`, error);
-      }
-    }
-  } catch (error) {
-    console.error('Error marking articles as pushed:', error);
-  }
-};
 
 /**
  * Gets recommended content, using cache if available and valid, otherwise fetching fresh
@@ -146,39 +121,3 @@ export const getRecommendedContent = async (): Promise<CacheData> => {
   return await fetchAndCacheRecommendedContent();
 };
 
-/**
- * Gets recommended content and marks them as pushed to client
- */
-export const getRecommendedContentAndMarkAsPushed = async (): Promise<CacheData> => {
-  const data = await getRecommendedContent();
-  
-  // Collect IDs of articles to mark as pushed
-  const articleIds = [
-    ...data.news.map(article => article.id),
-    ...data.blogs.map(article => article.id)
-  ];
-  
-  // Mark all retrieved articles as pushed
-  if (articleIds.length > 0) {
-    await markArticlesAsPushed(articleIds);
-    
-    // Update local cache to reflect the changes
-    const updatedCache: CacheData = {
-      ...data,
-      news: data.news.map(article => ({
-        ...article,
-        is_pushed_to_client: true,
-        pushed_at: new Date().toISOString()
-      })),
-      blogs: data.blogs.map(article => ({
-        ...article,
-        is_pushed_to_client: true,
-        pushed_at: new Date().toISOString()
-      }))
-    };
-    
-    localStorage.setItem(CACHE_KEY, JSON.stringify(updatedCache));
-  }
-  
-  return data;
-};

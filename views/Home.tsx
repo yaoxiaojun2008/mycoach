@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, ViewState } from '../types';
 import { supabase } from '../services/supabaseClient';
-import { getRecommendedContentAndMarkAsPushed, RecommendedArticle } from '../utils/recommendedCache'; // Import the new function
+import { getRecommendedContent, RecommendedArticle } from '../utils/recommendedCache'; // Import the function that fetches only pushed articles
 
 interface HomeProps {
   user: User;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getRecommendedContentAndMarkAsPushed, RecommendedArticle } from '../utils/recommendedCache';
+import { getRecommendedContent, RecommendedArticle } from '../utils/recommendedCache';
 
 interface RecommendedContentProps {
   onNavigate: (view: any) => void;
@@ -18,8 +18,8 @@ export const RecommendedContent: React.FC<RecommendedContentProps> = ({ onNaviga
   const loadRecommendedContent = async () => {
     try {
       setLoading(true);
-      // Use the function that marks articles as pushed to client
-      const data = await getRecommendedContentAndMarkAsPushed();
+      // Use the function that fetches only pushed articles
+      const data = await getRecommendedContent();
       setNewsItems(data.news);
       setBlogItems(data.blogs);
     } catch (err) {
